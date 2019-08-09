@@ -1,0 +1,7 @@
+[
+{text:'Class1',children:[],id:'1-class',leaf: false},
+{text:'Class2',children:[],id:'2-class',leaf: false},
+{text:'Class3', id:'3-class',leaf: false,children: [
+  {text:'Student_XiaoMing', id:'4-student', leaf: true}
+]}
+]

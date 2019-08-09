@@ -1,0 +1,201 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Tree Context Menu</title>
+    <link rel="stylesheet" type="text/css" href="./resources/css/ext-all.css"/>
+    <!-- LIBS -->
+    <script type="text/javascript" src="./adapter/ext/ext-base.js"></script>
+    <!-- ENDLIBS -->
+    <script type="text/javascript" src="./ext-all.js"></script>
+    <script>
+        Ext.onReady(function () {
+            var currentClickNodeId = "";
+            var generateUUId = function () {
+                return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
+            };
+            var getUuid = function () {
+                return (generateUUId() + generateUUId() + "-" + generateUUId() + "-"
+                    + generateUUId() + "-" + generateUUId() + "-" + generateUUId() + generateUUId() + generateUUId());
+            };
+            var root1 = new Ext.tree.AsyncTreeNode({
+                id: '0-school',
+                text: 'School',
+                checked: true,
+                expanded: true
+            });
+            var menu = new Ext.menu.Menu({
+                items: [{
+                    id: 'AddNode',
+                    text: 'Add Node'
+                }, {
+                    id: 'DeleteNode',
+                    text: 'Delete Node'
+                }],
+                listeners: {
+                    itemclick: function (item) {
+                        switch (item.id) {
+                            case 'AddNode':
+                                let addNode = item.parentMenu.contextNode;
+                                var uuid = getUuid();
+                                var isLeaf = addNode.leaf;
+                                var hasParent = addNode.parentNode != null ? true : false;
+                                if (isLeaf) {
+                                    Ext.MessageBox.alert('提示', "学生是叶子节点不能操作！");
+                                    return;
+                                }
+                                if (hasParent) {
+                                    uuid += "-student";
+                                } else {
+                                    uuid += "-class";
+                                }
+                                Ext.MessageBox.show({
+                                    title: 'Add',
+                                    msg: 'Please input :',
+                                    width: 300,
+                                    buttons: Ext.MessageBox.OKCANCEL,
+                                    multiline: true,
+                                    fn: (btn, text) => {
+                                        let name = text;
+                                        var newNode = new Ext.tree.TreeNode({
+                                            text: name,
+                                            id: uuid,
+                                            leaf: hasParent,
+                                            checked: true,
+                                            expanded: true
+                                        });
+                                        addNode.appendChild(newNode);
+                                    }
+                                });
+
+                                break;
+                            case 'DeleteNode':
+                                let deleteNode = item.parentMenu.contextNode;
+                                if (deleteNode.parentNode) {
+                                    deleteNode.remove();
+                                }
+                        }
+                    }
+                }
+            });
+            var tree1 = new Ext.tree.TreePanel({
+                width: 250,
+                height: 500,
+                root: root1,
+                enableDD: true,
+                loader: new Ext.tree.TreeLoader({dataUrl: 'tree.txt'}),
+                contextMenu: menu,
+                listeners: {
+                    contextmenu: function (node, e) {
+                        node.select();
+                        let treeContextMenu = node.getOwnerTree().contextMenu;
+                        treeContextMenu.contextNode = node;
+                        treeContextMenu.showAt(e.getXY());
+                    },
+                    click: function (node) {
+                        debugger;
+                        if (node.parentNode == null || node.parentNode == undefined) {
+                            Ext.DomQuery.selectNode('label[for=inputLabel]').innerHTML = 'Class Name';
+                        } else {
+                            Ext.DomQuery.selectNode('label[for=inputLabel]').innerHTML = 'Student Name';
+                        }
+                        currentClickNodeId = node.id;
+                        console.log("clickNodeId:" + currentClickNodeId);
+                    },
+                    beforenodedrop: function (e) {
+                        let targetIdType = e.target.id.substring(e.target.id.lastIndexOf("-") + 1, e.target.id.length);
+                        let dropNodeIdType = e.dropNode.id.substring(e.dropNode.id.lastIndexOf("-") + 1, e.dropNode.id.length);
+                        debugger;
+                        if (targetIdType.indexOf(dropNodeIdType) != -1) {
+                            Ext.Msg.alert('提醒', "不能移动到同级节点的下级！");
+                            return false;
+                        }
+                        if (targetIdType === 'student' && dropNodeIdType === 'class') {
+                            Ext.Msg.alert('提醒', "班级不能移动到学生节点的下级！");
+                            return false;
+                        }
+                        if (targetIdType.indexOf('school')!=-1&& dropNodeIdType === 'student') {
+                            Ext.Msg.alert('提醒', "学生不能移动到学校节点的下级！");
+                            return false;
+                        }
+                    }
+                }
+            });
+            var treeEditor = new Ext.tree.TreeEditor(tree1, {allowBlank: false}, {
+                listeners: {
+                    // beforecomplete: function (editor, currVal, origVal) {
+                    // },
+                    // complete: function (editor, currVal, origVal) {
+                    //     Ext.Msg.alert('Tree Editor', 'node text changed from ' + origVal + ' to ' + currVal);
+                    // }
+                }
+            });
+            var simple = new Ext.FormPanel({
+                // labelWidth: 75, // label settings here cascade unless overridden
+                frame: true,
+                id: "formInput",
+                width: 300,
+                title: 'Add Class or Student',
+                bodyStyle: 'padding:5px 5px 0',
+                // defaults: {width: 230},
+                defaultType: 'textfield',
+                items: [{
+                    id: 'inputLabel',
+                    fieldLabel: 'Name',
+                    name: 'first',
+                    allowBlank: false
+                }],
+                buttons: [{
+                    text: 'Save',
+                    listeners: {
+                        click: function (btn, event) {
+                            if (currentClickNodeId === "" || currentClickNodeId.length === 0) {
+                                Ext.MessageBox.alert('提示', "请点击一个节点！（学生节点不能进行添加操作）");
+                                return;
+                            }
+                            debugger;
+                            let currentNode = tree1.getNodeById(currentClickNodeId);
+                            let uuid = getUuid();
+                            let isLeaf = currentNode.leaf;
+                            let hasParent = currentNode.parentNode != null ? true : false;
+                            if (isLeaf) {
+                                Ext.MessageBox.alert('提示', "学生是叶子节点不能操作！");
+                                return;
+                            }
+                            if (hasParent) {
+                                uuid += "-student";
+                            } else {
+                                uuid += "-class";
+                            }
+                            let name = simple.form.findField('inputLabel').getValue()
+                            var newNode = new Ext.tree.TreeNode({
+                                text: name,
+                                id: uuid,
+                                leaf: hasParent,
+                                checked: true,
+                                expanded: true
+                            });
+                            currentNode.appendChild(newNode);
+                        }
+                    }
+                }]
+            });
+            var win = new Ext.Window({
+                title: 'Student Management',
+                closable: true,
+                width: 600,
+                height: 500,
+                autoScroll: true,
+                //border:false,
+                plain: true,
+                layout: 'column',
+                items: [tree1, simple]
+            });
+            win.show(this);
+        });
+    </script>
+</head>
+<body>
+<div id="test"></div>
+</body>
+</html>
