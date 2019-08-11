@@ -104,10 +104,6 @@
                     beforenodedrop: function (e) {
                         let targetIdType = e.target.id.substring(e.target.id.lastIndexOf("-") + 1, e.target.id.length);
                         let dropNodeIdType = e.dropNode.id.substring(e.dropNode.id.lastIndexOf("-") + 1, e.dropNode.id.length);
-                        if (targetIdType.indexOf(dropNodeIdType) != -1) {
-                            Ext.Msg.alert('提醒', "不能移动到同级节点的下级！");
-                            return false;
-                        }
                         if (targetIdType === 'student' && dropNodeIdType === 'class') {
                             Ext.Msg.alert('提醒', "班级不能移动到学生节点的下级！");
                             return false;
@@ -125,6 +121,10 @@
                         if (nodeIdType.indexOf('student')!=-1&&newParentType.indexOf('school')!=-1){
                             Ext.Msg.alert('提醒', "学生不能移动到学校节点的下级！");
                             return false;
+                        }
+                        if (oldParentType.indexOf(newParentType)===-1){
+                            Ext.Msg.alert('提醒', "不能移动到同级节点的下级哦！");
+                                 return false;
                         }
                     }
             
