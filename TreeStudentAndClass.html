@@ -93,7 +93,6 @@
                         treeContextMenu.showAt(e.getXY());
                     },
                     click: function (node) {
-                        debugger;
                         if (node.parentNode == null || node.parentNode == undefined) {
                             Ext.DomQuery.selectNode('label[for=inputLabel]').innerHTML = 'Class Name';
                         } else {
@@ -105,7 +104,6 @@
                     beforenodedrop: function (e) {
                         let targetIdType = e.target.id.substring(e.target.id.lastIndexOf("-") + 1, e.target.id.length);
                         let dropNodeIdType = e.dropNode.id.substring(e.dropNode.id.lastIndexOf("-") + 1, e.dropNode.id.length);
-                        debugger;
                         if (targetIdType.indexOf(dropNodeIdType) != -1) {
                             Ext.Msg.alert('提醒', "不能移动到同级节点的下级！");
                             return false;
@@ -118,7 +116,18 @@
                             Ext.Msg.alert('提醒', "学生不能移动到学校节点的下级！");
                             return false;
                         }
+                    },
+                    beforemovenode: function (tree, node, oldParent, newParent, index ) {
+                        debugger;
+                        let nodeIdType = node.id.substring(node.id.lastIndexOf("-") + 1,node.id.length);
+                        let oldParentType = oldParent.id.substring(oldParent.id.lastIndexOf("-") + 1,oldParent.id.length);
+                        let newParentType = newParent.id.substring(newParent.id.lastIndexOf("-") + 1,newParent.id.length);
+                        if (nodeIdType.indexOf('student')!=-1&&newParentType.indexOf('school')!=-1){
+                            Ext.Msg.alert('提醒', "学生不能移动到学校节点的下级！");
+                            return false;
+                        }
                     }
+            
                 }
             });
             var treeEditor = new Ext.tree.TreeEditor(tree1, {allowBlank: false}, {
@@ -141,7 +150,7 @@
                 defaultType: 'textfield',
                 items: [{
                     id: 'inputLabel',
-                    fieldLabel: 'Name',
+                    fieldLabel: 'Please select one Tee Node',
                     name: 'first',
                     allowBlank: false
                 }],
@@ -153,7 +162,6 @@
                                 Ext.MessageBox.alert('提示', "请点击一个节点！（学生节点不能进行添加操作）");
                                 return;
                             }
-                            debugger;
                             let currentNode = tree1.getNodeById(currentClickNodeId);
                             let uuid = getUuid();
                             let isLeaf = currentNode.leaf;
